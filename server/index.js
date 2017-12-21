@@ -6,7 +6,7 @@ app.get('/',(rep,res)=>{
   res.send({hi:'there'});
 });
 //look at the underline environment and see if there's a port we'll gonna use
-//if we are in development environment, heroku won;t assign us a port(in production, it will) 
+//if we are in development environment, heroku won;t assign us a port(in production, it will)
 //so we listen to default port 5000
-const PORT = process.env.port || 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT);
