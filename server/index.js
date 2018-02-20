@@ -8,10 +8,12 @@ const keys = require('./config/keys')
 //pay attention to the order of these two "require"s
 //we should execute User prior to passport in order to register Schema to User model
 require('./models/User');
+require('./models/Survey');
 require('./services/passport');
 mongoose.connect(keys.mongoURI);
 const authRoutes = require('./routes/authRoutes');
 const billingRoutes = require('./routes/billingRoutes');
+const surveyRoutes = require('./routes/surveyRoutes');
 const app=express();
 app.use(bodyParser.json());
 app.use(
@@ -25,7 +27,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 authRoutes(app);
 billingRoutes(app);
-
+surveyRoutes(app);
 
 //run only in prod mode
 if(process.env.NODE_ENV=='production'){
