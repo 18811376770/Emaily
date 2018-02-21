@@ -4,6 +4,7 @@ import {reduxForm, Field} from 'redux-form';
 import SurveyField from './SurveyField';
 import _ from 'lodash';
 import {Link} from 'react-router-dom';
+import validateEmails from '../../utils/validateEmails';
 const FIELDS = [
   {label:"Survey Title", name:"title"},
   {label:"Subject Line", name:"subject"},
@@ -38,10 +39,14 @@ class SurveyForm extends Component{
 //values is object contains all information inside our form
 function validate(values){
   const errors ={};
-  if(!values.title){
-    //Error.name match up with field, pass error as a props inside field
-    errors.title = "You must provide a title";
-  }
+  errors.emails = validateEmails(values.emails || "");
+  //Error.name match up with field, pass error as a props inside field
+  _.each(FIELDS, ({name})=> {
+    //cannot use value.name, because it refers to property called name
+    if(!values[name]){
+      errors[name] = 'You must provide a value';
+    }
+  });
   //once errors is empty, redux form assumes there are no errors inside the input
   return errors;
 }
