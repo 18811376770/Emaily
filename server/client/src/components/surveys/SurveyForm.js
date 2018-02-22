@@ -5,23 +5,20 @@ import SurveyField from './SurveyField';
 import _ from 'lodash';
 import {Link} from 'react-router-dom';
 import validateEmails from '../../utils/validateEmails';
-const FIELDS = [
-  {label:"Survey Title", name:"title"},
-  {label:"Subject Line", name:"subject"},
-  {label:"Email Body", name:"body"},
-  {label:"Recipient List", name:"emails"}
-]
+import formFields from './formFields';
 
 class SurveyForm extends Component{
   renderField(){
-    return _.map(FIELDS, ({label,name}) => {
+    return _.map(formFields, ({label,name}) => {
       return <Field key={name} component={SurveyField} type="text" label={label} name={name}/>
     });
   }
+    //<form onSubmit={this.props.handleSubmit(this.props.onSurveySubmit)}>
+    //why no ()after onSurveySubmit? We do not want to execute it once js interpret it.
   render(){
     return (
       <div>
-        <form onSubmit={this.props.handleSubmit(values => console.log(values))}>
+        <form onSubmit={this.props.handleSubmit(this.props.onSurveySubmit)}>
           {this.renderField()}
           <Link to="/surveys" className="red btn-flat white-text">
           Cancel
@@ -39,9 +36,9 @@ class SurveyForm extends Component{
 //values is object contains all information inside our form
 function validate(values){
   const errors ={};
-  errors.emails = validateEmails(values.emails || "");
+  errors.recipients = validateEmails(values.recipients || "");
   //Error.name match up with field, pass error as a props inside field
-  _.each(FIELDS, ({name})=> {
+  _.each(formFields, ({name})=> {
     //cannot use value.name, because it refers to property called name
     if(!values[name]){
       errors[name] = 'You must provide a value';
@@ -53,5 +50,6 @@ function validate(values){
 //this.props.handleSubmit is provided by reduxForm
 export default reduxForm({
   validate,
-  form:'surveyForm'
+  form:'surveyForm',
+  destroyOnUnmount:false
 })(SurveyForm);

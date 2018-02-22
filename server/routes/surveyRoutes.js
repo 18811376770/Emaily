@@ -1,3 +1,6 @@
+const _ = require('lodash');
+const Path = require('path-parser');
+const {URL} = require('url');
 const mongoose = require('mongoose');
 const Mailer = require('../services/Mailer');
 const requireLogin = require('../middlewares/requireLogin');
@@ -5,8 +8,52 @@ const requireCredits = require('../middlewares/requireCredits');
 const Survey = mongoose.model('surveys');
 const surveyTemplate = require('../services/emailTemplates/surveyTemplate');
 module.exports = app => {
-  app.get('/api/surveys/thanks',(req,res) => {
+  app.get('/api/surveys',requireLogin,async (req,res) => {
+    //_user is referenced from /models/Survey
+    //don't return entire recipients field
+    const surveys = await Survey.find({_user:req.user.id})
+      .select({recipients:false});
+    res.send(surveys);
+  });
+  app.get('/api/surveys/:surveyId/:choice',(req,res) => {
     res.send('Thanks for voting!');
+  });
+  app.post('/api/surveys/webhook',(req,res)=>{
+    //extract id,choice
+    const p = new Path('/api/surveys/:surveyId/:choice');
+    // const events1 = _.map(req.body, ({email,url}) => {
+    //   //only pathname is extracted
+    //   //it's an object like { surveyId: '5a8e64d0475ddb0965dcbf63', choice: 'no' } or null
+    //   const match = p.test(new URL(url).pathname);
+    //   if(match){
+    //     return {email,surveyId:match.surveyId,choice:match.choice};
+    //   }
+    // });
+    // const compactEvents = _.compact(events1);
+    // const events = _.uniqBy(compactEvents,'email','surveyId');
+    _.chain(req.body)
+    .map(({email, url}) =>{
+      const match = p.test(new URL(url).pathname);
+      if(match){
+          return {email,surveyId:match.surveyId,choice:match.choice};
+      }
+    })
+    .compact()
+    .uniqBy('email','surveyId')
+    .each(({ surveyId, email, choice}) => {
+      Survey.updateOne({
+        _id:surveyId,
+        recipients:{
+          $elemMatch:{email: email, responded: false}
+        }
+      },{
+        $inc:{[choice]:1},
+        $set:{'recipients.$.responded':true},
+        lastResponded: new Date()
+      }).exec();
+    })
+    .value();
+    res.send({});
   });
   app.post('/api/surveys', requireLogin, requireCredits, async (req,res) => {
     //we assume req.body has been send to backend server firstly
