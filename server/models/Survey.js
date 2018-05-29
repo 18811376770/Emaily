@@ -12,7 +12,7 @@ const surveySchema = new Schema({
   //this is suppose to be a reference field
   _user: {type: Schema.Types.ObjectId, ref:'User'},
   //provide more feature to user
-  dataSent: Date,
+  dateSent: Date,
   lastRespond: Date
 });
 
